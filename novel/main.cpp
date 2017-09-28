@@ -99,11 +99,22 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			//now->iItem项目序号 
 			switch (now->hdr.code) {//判断通知码  
 			case NM_CLICK:
-				 
+				
 				break;
 			case NM_DBLCLK:
-
+			{
+				// 获取选定项的小说章节链接
+				TCHAR pbuf[256];
+				LV_ITEM lvi;
+				lvi.mask = LVIF_TEXT;
+				lvi.cchTextMax = 256;
+				lvi.iItem = now->iItem;
+				lvi.iSubItem = 2;
+				lvi.pszText = pbuf;
+				ListView_GetItem(GetDlgItem(hDlg, IDC_NOVEL_LIST), &lvi);
+				GetNoveChapters(pbuf);
 				break;
+			}
 			case NM_RCLICK:
 
 				break;

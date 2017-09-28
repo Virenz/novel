@@ -13,6 +13,12 @@ typedef struct tagDownResourceInfo
 	std::wstring	strResourceLink;		//资源链接
 }DownResourceInfo;
 
+typedef struct tagNovelChapter
+{
+	std::wstring	strChapterName;		//章节名称
+	std::wstring	strChapterLink;		//章节链接
+}NovelChapter;
+
 static void StringToWstring(std::wstring& szDst, std::string& str)
 {
 	std::string temp = str;
@@ -22,6 +28,17 @@ static void StringToWstring(std::wstring& szDst, std::string& str)
 	MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)temp.c_str(), -1, (LPWSTR)wszUtf8, len);
 	szDst = wszUtf8;
 	delete[] wszUtf8;
+}
+
+static void Wchar_tToString(std::string& szDst, wchar_t *wchar)
+{
+	wchar_t * wText = wchar;
+	DWORD dwNum = WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, NULL, 0, NULL, FALSE);// WideCharToMultiByte的运用
+	char *psText;  // psText为char*的临时数组，作为赋值给std::string的中间变量
+	psText = new char[dwNum];
+	WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, psText, dwNum, NULL, FALSE);// WideCharToMultiByte的再次运用
+	szDst = psText;// std::string赋值
+	delete[]psText;// psText的清除
 }
 
 static BOOL UrlEncode(const wchar_t* szSrc, char* pBuf, int cbBufLen, BOOL bUpperCase)
@@ -156,7 +173,33 @@ static std::wstring GetSearchPage(std::string url)
 }
 
 //获取小说章节
-//<a.*([0 - 9]{ 2, }.html).*>([\u4e00 - \u9fa5 \（\）0 - 9\.]{ 1, })< / a>
+static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
+{
+	std::vector<NovelChapter> vtNovelChapters;
+	
+	std::string url;
+	Wchar_tToString(url, chapter_link);
+	std::wstring html = GetSearchPage(url);
+	
+	// 保存小说章节
+	NovelChapter info;
+
+	// 正则表达解析小说数据
+	const std::wregex pattern(L"<a.*([0-9]{2,}.html).*>([\u4e00-\u9fa5 \\（\\）0-9\.]{1,})</a>");
+	std::wsmatch result;
+
+	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本
+		it != end;
+		++it)
+	{
+		// 获取正则表达式中 小说每个章节名称
+		info.strChapterName = (*it)[2].str();
+		// 获取正则表达式中 小说每个章节链接
+		info.strChapterLink = (*it)[1].str();
+	}
+
+	return vtNovelChapters;
+}
 
 //获取小说内容
 
@@ -187,7 +230,7 @@ static std::vector<DownResourceInfo> GetNovelList(wchar_t* search_name)
 		DownResourceInfo info;
 		
 		// 正则表达解析小说数据
-		const std::wregex pattern(L"\"title\":\"(.*)\",\"url\":\"(.*)\"");
+		const std::wregex pattern(L"\\{\"title\":\"(.*)\",\"url\":\"(.*)\"\\}");
 		std::wsmatch result;
 
 		for (std::wsregex_iterator it(strNovel.begin(), strNovel.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本
