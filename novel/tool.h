@@ -19,13 +19,13 @@ typedef struct tagNovelChapter
 	std::wstring	strChapterLink;		//章节链接
 }NovelChapter;
 
-static void StringToWstring(std::wstring& szDst, std::string& str)
+static void StringToWstring(std::wstring& szDst, std::string& str, UINT codepage)
 {
 	std::string temp = str;
-	int len = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)temp.c_str(), -1, NULL, 0);
+	DWORD len = MultiByteToWideChar(codepage, 0, temp.c_str(), -1, NULL, 0);
 	wchar_t * wszUtf8 = new wchar_t[len + 1];
-	memset(wszUtf8, 0, len * 2 + 2);
-	MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)temp.c_str(), -1, (LPWSTR)wszUtf8, len);
+	memset(wszUtf8, 0, (len+1)*sizeof(wchar_t));
+	MultiByteToWideChar(codepage, 0, temp.c_str(), -1, wszUtf8, len);
 	szDst = wszUtf8;
 	delete[] wszUtf8;
 }
@@ -140,35 +140,76 @@ static bool InitCurl(CURL *easy_handle, CURLcode &res, std::string &url, std::st
 	//执行http请求
 	res = curl_easy_perform(easy_handle);
 	if (res != CURLE_OK)
+	{
 		return FALSE;
-
+	}
 	return TRUE;
 }
 
+// 传入网址url，传出跳转真实网址realurl
+// 返回网页源代码
 static std::wstring GetSearchPage(std::string url)
 {
+	struct curl_slist *head = NULL;
+
 	CURL *easy_handle;
 	CURLcode res;
 	std::string content;
+	std::string real_url;
 	curl_global_init(CURL_GLOBAL_ALL);
 	easy_handle = curl_easy_init();
+
 	if (easy_handle)
 	{
-		//curl_easy_setopt(easy_handle, CURLOPT_FOLLOWLOCATION, 1L);
+		curl_easy_setopt(easy_handle, CURLOPT_FOLLOWLOCATION, 1L);
+		head = curl_slist_append(head, "Content-Type:application/x-www-form-urlencoded;charset=UTF-8");
+		curl_easy_setopt(easy_handle, CURLOPT_HTTPHEADER, head);
 
 		if (!InitCurl(easy_handle, res, url, content))
 		{
+			curl_slist_free_all(head);//记得要释放 
 			//释放资源
 			curl_easy_cleanup(easy_handle);
 			return NULL;
 		}
+		char *realurl = NULL;
+		curl_easy_getinfo(easy_handle, CURLINFO_EFFECTIVE_URL, &realurl);
+		real_url.append(realurl);
+		curl_slist_free_all(head);//记得要释放 
 		//释放资源
 		curl_easy_cleanup(easy_handle);
 	}
 	curl_global_cleanup();
-	// 将内容有UTF-8转换为WString
+	// 将内容转换为WString, 判断网页源码的charset
+	UINT codepage = 0;
+	if(-1 != content.find("charset=gbk",0))
+	{
+		codepage = 0;
+	}
+	if(-1 != content.find("charset=GBK", 0))   
+	{
+		codepage = 0;
+	}
+	if(-1 != content.find("charset=gb2312", 0))
+	{
+		codepage = 0;
+	}
+	if(-1 != content.find("charset=GB2312", 0))
+	{
+		codepage = 0;
+	}
+	if(-1 != content.find("charset=utf-8", 0))
+	{
+		codepage = 65001;
+	}
+	if(-1 != content.find("charset=UTF-8, 0"))
+	{
+		codepage = 65001;
+	}
 	std::wstring tt;
-	StringToWstring(tt, content);
+	content.append("REAL_URL:[" + real_url + "]");
+	StringToWstring(tt, content, codepage);
+
 	return tt;
 }
 
@@ -180,12 +221,17 @@ static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 	std::string url;
 	Wchar_tToString(url, chapter_link);
 	std::wstring html = GetSearchPage(url);
-	
+
 	// 保存小说章节
 	NovelChapter info;
 
+	// 获取真实链接
+	int nStartPos = html.rfind(L"REAL_URL:\[", html.size());
+	int nEndPos = html.rfind(L"\]", html.size());
+	std::wstring strrealurl = html.substr(nStartPos+10, nEndPos - nStartPos-10);
+
 	// 正则表达解析小说数据
-	const std::wregex pattern(L"<a.*([0-9]{2,}.html).*>([\u4e00-\u9fa5 \\（\\）0-9\.]{1,})</a>");
+	const std::wregex pattern(L"<a.*\"([0-9a-z/]+.html)\".*>([\u4e00-\u9fa5 \\（\\）0-9\.]{1,})</a>");
 	std::wsmatch result;
 
 	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本
@@ -195,9 +241,8 @@ static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 		// 获取正则表达式中 小说每个章节名称
 		info.strChapterName = (*it)[2].str();
 		// 获取正则表达式中 小说每个章节链接
-		info.strChapterLink = (*it)[1].str();
+		info.strChapterLink = strrealurl+(*it)[1].str();
 	}
-
 	return vtNovelChapters;
 }
 
