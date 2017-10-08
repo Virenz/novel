@@ -102,6 +102,23 @@ static BOOL UrlEncode(const wchar_t* szSrc, char* pBuf, int cbBufLen, BOOL bUppe
 	return TRUE;
 }
 
+// 小说网址拼凑链接，主要针对首页+章节的组合获取完整的网址
+static std::wstring getFullChapterLink(std::wstring& realurl, std::wstring& chapterLink)
+{
+	// 切割当前网页真实网址以"/"结尾
+	int realurl_pos = realurl.rfind(L"/");
+	std::wstring m_realurl = realurl.substr(0, realurl_pos+1);
+
+	int chapter_pos = chapterLink.rfind(L"/");
+	std::wstring m_chapter;
+	if(chapter_pos != -1)
+		m_chapter = chapterLink.substr(chapter_pos+1, wcslen(chapterLink.c_str())- chapter_pos - 1);
+	else
+		m_chapter = chapterLink.substr(0, wcslen(chapterLink.c_str()));
+
+	return m_realurl+m_chapter;
+}
+
 static long writer(void *data, int size, int nmemb, std::string &content)
 {
 	long sizes = size * nmemb;
@@ -150,7 +167,7 @@ static bool InitCurl(CURL *easy_handle, CURLcode &res, std::string &url, std::st
 // 返回网页源代码
 static std::wstring GetSearchPage(std::string url)
 {
-	struct curl_slist *head = NULL;
+	//struct curl_slist *head = NULL;
 
 	CURL *easy_handle;
 	CURLcode res;
@@ -162,12 +179,12 @@ static std::wstring GetSearchPage(std::string url)
 	if (easy_handle)
 	{
 		curl_easy_setopt(easy_handle, CURLOPT_FOLLOWLOCATION, 1L);
-		head = curl_slist_append(head, "Content-Type:application/x-www-form-urlencoded;charset=UTF-8");
-		curl_easy_setopt(easy_handle, CURLOPT_HTTPHEADER, head);
+		//head = curl_slist_append(head, "Content-Type:application/x-www-form-urlencoded;charset=UTF-8");
+		//curl_easy_setopt(easy_handle, CURLOPT_HTTPHEADER, head);
 
 		if (!InitCurl(easy_handle, res, url, content))
 		{
-			curl_slist_free_all(head);//记得要释放 
+			//curl_slist_free_all(head);//记得要释放 
 			//释放资源
 			curl_easy_cleanup(easy_handle);
 			return NULL;
@@ -175,13 +192,13 @@ static std::wstring GetSearchPage(std::string url)
 		char *realurl = NULL;
 		curl_easy_getinfo(easy_handle, CURLINFO_EFFECTIVE_URL, &realurl);
 		real_url.append(realurl);
-		curl_slist_free_all(head);//记得要释放 
+		//curl_slist_free_all(head);//记得要释放 
 		//释放资源
 		curl_easy_cleanup(easy_handle);
 	}
 	curl_global_cleanup();
 	// 将内容转换为WString, 判断网页源码的charset
-	UINT codepage = 0;
+	UINT codepage = 65001;
 	if(-1 != content.find("charset=gbk",0))
 	{
 		codepage = 0;
@@ -202,7 +219,7 @@ static std::wstring GetSearchPage(std::string url)
 	{
 		codepage = 65001;
 	}
-	if(-1 != content.find("charset=UTF-8, 0"))
+	if(-1 != content.find("charset=UTF-8", 0))
 	{
 		codepage = 65001;
 	}
@@ -231,7 +248,7 @@ static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 	std::wstring strrealurl = html.substr(nStartPos+10, nEndPos - nStartPos-10);
 
 	// 正则表达解析小说数据
-	const std::wregex pattern(L"<a.*\"([0-9a-z/]+.html)\".*>([\u4e00-\u9fa5 \\（\\）0-9\.]{1,})</a>");
+	const std::wregex pattern(L"<a[^\u4e00-\u9fa5]*\"([0-9a-z/_]+.html)\"[^\u4e00-\u9fa5]*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\！\\【\\】\\？\\~]{1,})</a>");// (L"<a.*\"([0-9a-z/_]+.html)\".*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，]{1,})</a>");
 	std::wsmatch result;
 
 	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本
@@ -241,12 +258,35 @@ static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 		// 获取正则表达式中 小说每个章节名称
 		info.strChapterName = (*it)[2].str();
 		// 获取正则表达式中 小说每个章节链接
-		info.strChapterLink = strrealurl+(*it)[1].str();
+		info.strChapterLink = getFullChapterLink(strrealurl,(*it)[1].str());
+		vtNovelChapters.push_back(info);
 	}
 	return vtNovelChapters;
 }
 
-//获取小说内容
+//获取小说章节内容
+//&nbsp;&nbsp;&nbsp;&nbsp;([\u4e00-\u9fa5\S]{1,})<br
+static std::wstring GetChapterContent(wchar_t* chapter_link)
+{
+	std::string url;
+	Wchar_tToString(url, chapter_link);
+	std::wstring html = GetSearchPage(url);
+
+	// 正则表达解析小说章节内容
+	const std::wregex pattern(L"(&nbsp;&nbsp;&nbsp;&nbsp;|)*([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\。\\！\\？\\“\\”\\…\\、\\：\\~]{1,})<br");
+	std::wsmatch result;
+	std::wstring contents;
+
+	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本
+		it != end;
+		++it)
+	{
+		// 获取正则表达式中 小说每个章节名称
+		contents.append((*it)[2].str());
+		contents.append(L"\r\n");
+	}
+	return contents;
+}
 
 //获取搜索小说列表
 static std::vector<DownResourceInfo> GetNovelList(wchar_t* search_name)
@@ -266,7 +306,7 @@ static std::vector<DownResourceInfo> GetNovelList(wchar_t* search_name)
 	int flag = 1;
 	while ((nPos = html.find(L"se_st_com_abstract", n)) != -1)
 	{
-		n = nPos + 1;
+		n = nPos + 10;
 		int nStartPos = nPos;
 		int nEndPos = html.find(L"</div></div>", nStartPos);
 		std::wstring strNovel = html.substr(nStartPos, nEndPos - nStartPos);
