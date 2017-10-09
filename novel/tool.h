@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <string>
 #include <vector>
@@ -8,15 +8,15 @@
 
 typedef struct tagDownResourceInfo
 {
-	int				rowNum;					//ĞĞºÅ
-	std::wstring	strResourceName;		//×ÊÔ´Ãû³Æ
-	std::wstring	strResourceLink;		//×ÊÔ´Á´½Ó
+	int				rowNum;					//è¡Œå·
+	std::wstring	strResourceName;		//èµ„æºåç§°
+	std::wstring	strResourceLink;		//èµ„æºé“¾æ¥
 }DownResourceInfo;
 
 typedef struct tagNovelChapter
 {
-	std::wstring	strChapterName;		//ÕÂ½ÚÃû³Æ
-	std::wstring	strChapterLink;		//ÕÂ½ÚÁ´½Ó
+	std::wstring	strChapterName;		//ç« èŠ‚åç§°
+	std::wstring	strChapterLink;		//ç« èŠ‚é“¾æ¥
 }NovelChapter;
 
 static void StringToWstring(std::wstring& szDst, std::string& str, UINT codepage)
@@ -33,12 +33,12 @@ static void StringToWstring(std::wstring& szDst, std::string& str, UINT codepage
 static void Wchar_tToString(std::string& szDst, wchar_t *wchar)
 {
 	wchar_t * wText = wchar;
-	DWORD dwNum = WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, NULL, 0, NULL, FALSE);// WideCharToMultiByteµÄÔËÓÃ
-	char *psText;  // psTextÎªchar*µÄÁÙÊ±Êı×é£¬×÷Îª¸³Öµ¸østd::stringµÄÖĞ¼ä±äÁ¿
+	DWORD dwNum = WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, NULL, 0, NULL, FALSE);// WideCharToMultiByteçš„è¿ç”¨
+	char *psText;  // psTextä¸ºchar*çš„ä¸´æ—¶æ•°ç»„ï¼Œä½œä¸ºèµ‹å€¼ç»™std::stringçš„ä¸­é—´å˜é‡
 	psText = new char[dwNum];
-	WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, psText, dwNum, NULL, FALSE);// WideCharToMultiByteµÄÔÙ´ÎÔËÓÃ
-	szDst = psText;// std::string¸³Öµ
-	delete[]psText;// psTextµÄÇå³ı
+	WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, psText, dwNum, NULL, FALSE);// WideCharToMultiByteçš„å†æ¬¡è¿ç”¨
+	szDst = psText;// std::stringèµ‹å€¼
+	delete[]psText;// psTextçš„æ¸…é™¤
 }
 
 static BOOL UrlEncode(const wchar_t* szSrc, char* pBuf, int cbBufLen, BOOL bUpperCase)
@@ -65,7 +65,7 @@ static BOOL UrlEncode(const wchar_t* szSrc, char* pBuf, int cbBufLen, BOOL bUppe
 	pUTF8[cbUTF8] = '\0';
 
 	unsigned char c;
-	int cbDest = 0; //ÀÛ¼Ó
+	int cbDest = 0; //ç´¯åŠ 
 	unsigned char *pSrc = (unsigned char*)pUTF8;
 	unsigned char *pDest = (unsigned char*)pBuf;
 	while (*pSrc && cbDest < cbBufLen - 1)
@@ -85,7 +85,7 @@ static BOOL UrlEncode(const wchar_t* szSrc, char* pBuf, int cbBufLen, BOOL bUppe
 		}
 		else
 		{
-			//¼ì²é»º³åÇø´óĞ¡ÊÇ·ñ¹»ÓÃ£¿
+			//æ£€æŸ¥ç¼“å†²åŒºå¤§å°æ˜¯å¦å¤Ÿç”¨ï¼Ÿ
 			if (cbDest + 3 > cbBufLen - 1)
 				break;
 			pDest[0] = '%';
@@ -102,7 +102,7 @@ static BOOL UrlEncode(const wchar_t* szSrc, char* pBuf, int cbBufLen, BOOL bUppe
 	return TRUE;
 }
 
-// Ğ¡ËµÍøÖ·Æ´´ÕÁ´½Ó£¬Ö÷ÒªÕë¶ÔÊ×Ò³+ÕÂ½ÚµÄ×éºÏ»ñÈ¡ÍêÕûµÄÍøÖ·
+// å°è¯´ç½‘å€æ‹¼å‡‘é“¾æ¥ï¼Œä¸»è¦é’ˆå¯¹é¦–é¡µ+ç« èŠ‚çš„ç»„åˆè·å–å®Œæ•´çš„ç½‘å€
 static std::wstring getFullChapterLink(std::wstring& realurl, std::wstring& chapterLink)
 {
 	if (chapterLink.find(L"http") != -1)
@@ -110,7 +110,7 @@ static std::wstring getFullChapterLink(std::wstring& realurl, std::wstring& chap
 		return chapterLink;
 	}
 
-	// ÇĞ¸îµ±Ç°ÍøÒ³ÕæÊµÍøÖ·ÒÔ"/"½áÎ²
+	// åˆ‡å‰²å½“å‰ç½‘é¡µçœŸå®ç½‘å€ä»¥"/"ç»“å°¾
 	int realurl_pos = realurl.rfind(L"/");
 	std::wstring m_realurl = realurl.substr(0, realurl_pos+1);
 
@@ -133,10 +133,10 @@ static long writer(void *data, int size, int nmemb, std::string &content)
 }
 
 /************************************************************************
-* º¯Êı×÷ÓÃ£º»ñÈ¡ËÑË÷Ğ¡Ëµ
-* ²ÎÊıËµÃ÷£º¹Ø¼ü×Ö
-* ·µ »Ø Öµ£ºEnumResult
-* ±¸×¢ĞÅÏ¢£ºÎŞ
+* å‡½æ•°ä½œç”¨ï¼šè·å–æœç´¢å°è¯´
+* å‚æ•°è¯´æ˜ï¼šå…³é”®å­—
+* è¿” å› å€¼ï¼šEnumResult
+* å¤‡æ³¨ä¿¡æ¯ï¼šæ— 
 ************************************************************************/
 static bool InitCurl(CURL *easy_handle, CURLcode &res, std::string &url, std::string &content)
 {
@@ -145,12 +145,12 @@ static bool InitCurl(CURL *easy_handle, CURLcode &res, std::string &url, std::st
 	if (res != CURLE_OK)
 		return FALSE;
 
-	//»Øµ÷º¯Êı
+	//å›è°ƒå‡½æ•°
 	res = curl_easy_setopt(easy_handle, CURLOPT_WRITEFUNCTION, writer);
 	if (res != CURLE_OK)
 		return FALSE;
 
-	//»Øµ÷º¯ÊıµÄ²ÎÊı£ºcontent
+	//å›è°ƒå‡½æ•°çš„å‚æ•°ï¼šcontent
 	res = curl_easy_setopt(easy_handle, CURLOPT_WRITEDATA, &content);
 	if (res != CURLE_OK)
 		return FALSE;
@@ -159,7 +159,7 @@ static bool InitCurl(CURL *easy_handle, CURLcode &res, std::string &url, std::st
 	curl_easy_setopt(easy_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 	curl_easy_setopt(easy_handle, CURLOPT_SSL_VERIFYHOST, 0L);
 
-	//Ö´ĞĞhttpÇëÇó
+	//æ‰§è¡Œhttpè¯·æ±‚
 	res = curl_easy_perform(easy_handle);
 	if (res != CURLE_OK)
 	{
@@ -168,8 +168,8 @@ static bool InitCurl(CURL *easy_handle, CURLcode &res, std::string &url, std::st
 	return TRUE;
 }
 
-// ´«ÈëÍøÖ·url£¬´«³öÌø×ªÕæÊµÍøÖ·realurl
-// ·µ»ØÍøÒ³Ô´´úÂë
+// ä¼ å…¥ç½‘å€urlï¼Œä¼ å‡ºè·³è½¬çœŸå®ç½‘å€realurl
+// è¿”å›ç½‘é¡µæºä»£ç 
 static std::wstring GetSearchPage(std::string url)
 {
 	//struct curl_slist *head = NULL;
@@ -190,20 +190,20 @@ static std::wstring GetSearchPage(std::string url)
 
 		if (!InitCurl(easy_handle, res, url, content))
 		{
-			//curl_slist_free_all(head);//¼ÇµÃÒªÊÍ·Å 
-			//ÊÍ·Å×ÊÔ´
+			//curl_slist_free_all(head);//è®°å¾—è¦é‡Šæ”¾ 
+			//é‡Šæ”¾èµ„æº
 			curl_easy_cleanup(easy_handle);
 			return tt;
 		}
 		char *realurl = NULL;
 		curl_easy_getinfo(easy_handle, CURLINFO_EFFECTIVE_URL, &realurl);
 		real_url.append(realurl);
-		//curl_slist_free_all(head);//¼ÇµÃÒªÊÍ·Å 
-		//ÊÍ·Å×ÊÔ´
+		//curl_slist_free_all(head);//è®°å¾—è¦é‡Šæ”¾ 
+		//é‡Šæ”¾èµ„æº
 		curl_easy_cleanup(easy_handle);
 	}
 	curl_global_cleanup();
-	// ½«ÄÚÈİ×ª»»ÎªWString, ÅĞ¶ÏÍøÒ³Ô´ÂëµÄcharset
+	// å°†å†…å®¹è½¬æ¢ä¸ºWString, åˆ¤æ–­ç½‘é¡µæºç çš„charset
 	UINT codepage = 65001;
 	if(-1 != content.find("charset=gbk",0))
 	{
@@ -236,7 +236,7 @@ static std::wstring GetSearchPage(std::string url)
 	return tt;
 }
 
-//»ñÈ¡Ğ¡ËµÕÂ½Ú
+//è·å–å°è¯´ç« èŠ‚
 static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 {
 	std::vector<NovelChapter> vtNovelChapters;
@@ -245,34 +245,34 @@ static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 	Wchar_tToString(url, chapter_link);
 	std::wstring html = GetSearchPage(url);
 
-	// ±£´æĞ¡ËµÕÂ½Ú
+	// ä¿å­˜å°è¯´ç« èŠ‚
 	NovelChapter info;
 
-	// »ñÈ¡ÕæÊµÁ´½Ó
+	// è·å–çœŸå®é“¾æ¥
 	int nStartPos = html.rfind(L"REAL_URL:\[", html.size());
 	int nEndPos = html.rfind(L"\]", html.size());
 	std::wstring strrealurl = html.substr(nStartPos+10, nEndPos - nStartPos-10);
 
-	// ÕıÔò±í´ï½âÎöĞ¡ËµÊı¾İ
-	// (L"<a[^/]*\"([0-9a-z/_]+.html)\"[^/]*>([\u4e00-\u9fa5 \\¡¶\\¡·\\£¨\\£©0-9\.\\£¬\\£¡\\¡¾\\¡¿\\£¿\\~]{1,})</a>");
-	// (L"<a.*\"([0-9a-z/_]+.html)\".*>([\u4e00-\u9fa5 \\¡¶\\¡·\\£¨\\£©0-9\.\\£¬]{1,})</a>");
-	const std::wregex pattern(L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \\¡¶\\¡·\\£¨\\£©0-9\.\\£¬\\£¡\\¡¾\\¡¿\\£¿\\~]{1,})</a>"); 
+	// æ­£åˆ™è¡¨è¾¾è§£æå°è¯´æ•°æ®
+	// (L"<a[^/]*\"([0-9a-z/_]+.html)\"[^/]*>([\u4e00-\u9fa5 \\ã€Š\\ã€‹\\ï¼ˆ\\ï¼‰0-9\.\\ï¼Œ\\ï¼\\ã€\\ã€‘\\ï¼Ÿ\\~]{1,})</a>");
+	// (L"<a.*\"([0-9a-z/_]+.html)\".*>([\u4e00-\u9fa5 \\ã€Š\\ã€‹\\ï¼ˆ\\ï¼‰0-9\.\\ï¼Œ]{1,})</a>");
+	const std::wregex pattern(L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \|\\ã€Š\\ã€‹\\ï¼ˆ\\ï¼‰?0-9â“ªâ‘ â‘¡â‘¢â‘£â‘¤â‘¥â‘¦â‘§â‘¨â‘©\.\\ï¼Œ\\ï¼\\ã€\\ã€‘\\ï¼Ÿ\\â€œ\\â€\\â€¦\\ã€\\ï¼š\\~\\â†’\\â˜†]{1,})</a>"); 
 	std::wsmatch result;
 
-	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //endÊÇÎ²ºóµü´úÆ÷£¬regex_iteratorÊÇregex_iteratorµÄstringÀàĞÍµÄ°æ±¾
+	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //endæ˜¯å°¾åè¿­ä»£å™¨ï¼Œregex_iteratoræ˜¯regex_iteratorçš„stringç±»å‹çš„ç‰ˆæœ¬
 		it != end;
 		++it)
 	{
-		// »ñÈ¡ÕıÔò±í´ïÊ½ÖĞ Ğ¡ËµÃ¿¸öÕÂ½ÚÃû³Æ
+		// è·å–æ­£åˆ™è¡¨è¾¾å¼ä¸­ å°è¯´æ¯ä¸ªç« èŠ‚åç§°
 		info.strChapterName = (*it)[2].str();
-		// »ñÈ¡ÕıÔò±í´ïÊ½ÖĞ Ğ¡ËµÃ¿¸öÕÂ½ÚÁ´½Ó
+		// è·å–æ­£åˆ™è¡¨è¾¾å¼ä¸­ å°è¯´æ¯ä¸ªç« èŠ‚é“¾æ¥
 		info.strChapterLink = getFullChapterLink(strrealurl,(*it)[1].str());
 		vtNovelChapters.push_back(info);
 	}
 	return vtNovelChapters;
 }
 
-//»ñÈ¡Ğ¡ËµÕÂ½ÚÄÚÈİ
+//è·å–å°è¯´ç« èŠ‚å†…å®¹
 //&nbsp;&nbsp;&nbsp;&nbsp;([\u4e00-\u9fa5\S]{1,})<br
 static std::wstring GetChapterContent(wchar_t* chapter_link)
 {
@@ -280,23 +280,23 @@ static std::wstring GetChapterContent(wchar_t* chapter_link)
 	Wchar_tToString(url, chapter_link);
 	std::wstring html = GetSearchPage(url);
 
-	// ÕıÔò±í´ï½âÎöĞ¡ËµÕÂ½ÚÄÚÈİ
-	const std::wregex pattern(L"(&nbsp;&nbsp;&nbsp;&nbsp;|&rdquo;|)*([\u4e00-\u9fa5 \\¡¶\\¡·\\£¨\\£©0-9\.\\£¬\\¡£\\£¡\\£¿\\¡°\\¡±\\¡­\\¡¢\\£º\\~]{1,})(<br|</p>)");
+	// æ­£åˆ™è¡¨è¾¾è§£æå°è¯´ç« èŠ‚å†…å®¹
+	const std::wregex pattern(L"(&nbsp;&nbsp;&nbsp;&nbsp;|&rdquo;|)*([\u4e00-\u9fa5 \\ã€Š\\ã€‹\\ï¼ˆ\\ï¼‰0-9\.\\ï¼Œ\\ã€‚\\ï¼\\ï¼Ÿ\\â€œ\\â€\\â€¦\\ã€\\ï¼š\\~]{1,})(<br|</p>)");
 	std::wsmatch result;
 	std::wstring contents;
 
-	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //endÊÇÎ²ºóµü´úÆ÷£¬regex_iteratorÊÇregex_iteratorµÄstringÀàĞÍµÄ°æ±¾
+	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //endæ˜¯å°¾åè¿­ä»£å™¨ï¼Œregex_iteratoræ˜¯regex_iteratorçš„stringç±»å‹çš„ç‰ˆæœ¬
 		it != end;
 		++it)
 	{
-		// »ñÈ¡ÕıÔò±í´ïÊ½ÖĞ Ğ¡ËµÃ¿¸öÕÂ½ÚÃû³Æ
+		// è·å–æ­£åˆ™è¡¨è¾¾å¼ä¸­ å°è¯´æ¯ä¸ªç« èŠ‚åç§°
 		contents.append((*it)[2].str());
 		contents.append(L"\r\n");
 	}
 	return contents;
 }
 
-//»ñÈ¡ËÑË÷Ğ¡ËµÁĞ±í
+//è·å–æœç´¢å°è¯´åˆ—è¡¨
 static std::vector<DownResourceInfo> GetNovelList(wchar_t* search_name)
 {
 	std::vector<DownResourceInfo> vtDownload;
@@ -318,23 +318,23 @@ static std::vector<DownResourceInfo> GetNovelList(wchar_t* search_name)
 		int nStartPos = nPos;
 		int nEndPos = html.find(L"</div></div>", nStartPos);
 		std::wstring strNovel = html.substr(nStartPos, nEndPos - nStartPos);
-		// ±£´æĞ¡ËµÊı¾İ
+		// ä¿å­˜å°è¯´æ•°æ®
 		DownResourceInfo info;
 		
-		// ÕıÔò±í´ï½âÎöĞ¡ËµÊı¾İ
+		// æ­£åˆ™è¡¨è¾¾è§£æå°è¯´æ•°æ®
 		const std::wregex pattern(L"\\{\"title\":\"([^/]*)\",\"url\":\"([^\u4e00-\u9fa5]*)\"\\}");
 		std::wsmatch result;
 
-		for (std::wsregex_iterator it(strNovel.begin(), strNovel.end(), pattern), end;     //endÊÇÎ²ºóµü´úÆ÷£¬regex_iteratorÊÇregex_iteratorµÄstringÀàĞÍµÄ°æ±¾
+		for (std::wsregex_iterator it(strNovel.begin(), strNovel.end(), pattern), end;     //endæ˜¯å°¾åè¿­ä»£å™¨ï¼Œregex_iteratoræ˜¯regex_iteratorçš„stringç±»å‹çš„ç‰ˆæœ¬
 			it != end;
 			++it)
 		{
-			// »ñÈ¡ÕıÔò±í´ïÊ½ÖĞ Ğ¡ËµÃû³Æ
+			// è·å–æ­£åˆ™è¡¨è¾¾å¼ä¸­ å°è¯´åç§°
 			info.strResourceName = (*it)[1].str();
-			// »ñÈ¡ÕıÔò±í´ïÊ½ÖĞ Ğ¡ËµÁ´½Ó
+			// è·å–æ­£åˆ™è¡¨è¾¾å¼ä¸­ å°è¯´é“¾æ¥
 			info.strResourceLink = (*it)[2].str();
 		}
-		// »ñÈ¡ÕıÔò±í´ïÊ½ÖĞ Ğ¡ËµĞòºÅ
+		// è·å–æ­£åˆ™è¡¨è¾¾å¼ä¸­ å°è¯´åºå·
 		info.rowNum = flag;
 		vtDownload.push_back(info);
 		++flag;
