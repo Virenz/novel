@@ -105,6 +105,11 @@ static BOOL UrlEncode(const wchar_t* szSrc, char* pBuf, int cbBufLen, BOOL bUppe
 // 小说网址拼凑链接，主要针对首页+章节的组合获取完整的网址
 static std::wstring getFullChapterLink(std::wstring& realurl, std::wstring& chapterLink)
 {
+	if (chapterLink.find(L"http") != -1)
+	{
+		return chapterLink;
+	}
+
 	// 切割当前网页真实网址以"/"结尾
 	int realurl_pos = realurl.rfind(L"/");
 	std::wstring m_realurl = realurl.substr(0, realurl_pos+1);
@@ -172,6 +177,7 @@ static std::wstring GetSearchPage(std::string url)
 	CURL *easy_handle;
 	CURLcode res;
 	std::string content;
+	std::wstring tt;
 	std::string real_url;
 	curl_global_init(CURL_GLOBAL_ALL);
 	easy_handle = curl_easy_init();
@@ -187,7 +193,7 @@ static std::wstring GetSearchPage(std::string url)
 			//curl_slist_free_all(head);//记得要释放 
 			//释放资源
 			curl_easy_cleanup(easy_handle);
-			return NULL;
+			return tt;
 		}
 		char *realurl = NULL;
 		curl_easy_getinfo(easy_handle, CURLINFO_EFFECTIVE_URL, &realurl);
@@ -223,7 +229,7 @@ static std::wstring GetSearchPage(std::string url)
 	{
 		codepage = 65001;
 	}
-	std::wstring tt;
+	
 	content.append("REAL_URL:[" + real_url + "]");
 	StringToWstring(tt, content, codepage);
 
@@ -248,7 +254,9 @@ static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 	std::wstring strrealurl = html.substr(nStartPos+10, nEndPos - nStartPos-10);
 
 	// 正则表达解析小说数据
-	const std::wregex pattern(L"<a[^\u4e00-\u9fa5]*\"([0-9a-z/_]+.html)\"[^\u4e00-\u9fa5]*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\！\\【\\】\\？\\~]{1,})</a>");// (L"<a.*\"([0-9a-z/_]+.html)\".*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，]{1,})</a>");
+	// (L"<a[^/]*\"([0-9a-z/_]+.html)\"[^/]*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\！\\【\\】\\？\\~]{1,})</a>");
+	// (L"<a.*\"([0-9a-z/_]+.html)\".*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，]{1,})</a>");
+	const std::wregex pattern(L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\！\\【\\】\\？\\~]{1,})</a>"); 
 	std::wsmatch result;
 
 	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本
@@ -273,7 +281,7 @@ static std::wstring GetChapterContent(wchar_t* chapter_link)
 	std::wstring html = GetSearchPage(url);
 
 	// 正则表达解析小说章节内容
-	const std::wregex pattern(L"(&nbsp;&nbsp;&nbsp;&nbsp;|)*([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\。\\！\\？\\“\\”\\…\\、\\：\\~]{1,})<br");
+	const std::wregex pattern(L"(&nbsp;&nbsp;&nbsp;&nbsp;|&rdquo;|)*([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\。\\！\\？\\“\\”\\…\\、\\：\\~]{1,})(<br|</p>)");
 	std::wsmatch result;
 	std::wstring contents;
 
@@ -304,18 +312,17 @@ static std::vector<DownResourceInfo> GetNovelList(wchar_t* search_name)
 	int nPos = 0;
 	int n = 0;
 	int flag = 1;
-	while ((nPos = html.find(L"se_st_com_abstract", n)) != -1)
+	while ((nPos = html.find(L"\"result c-container \"", n)) != -1)
 	{
 		n = nPos + 10;
 		int nStartPos = nPos;
 		int nEndPos = html.find(L"</div></div>", nStartPos);
 		std::wstring strNovel = html.substr(nStartPos, nEndPos - nStartPos);
-
 		// 保存小说数据
 		DownResourceInfo info;
 		
 		// 正则表达解析小说数据
-		const std::wregex pattern(L"\\{\"title\":\"(.*)\",\"url\":\"(.*)\"\\}");
+		const std::wregex pattern(L"\\{\"title\":\"([^/]*)\",\"url\":\"([^\u4e00-\u9fa5]*)\"\\}");
 		std::wsmatch result;
 
 		for (std::wsregex_iterator it(strNovel.begin(), strNovel.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本

@@ -4,6 +4,7 @@
 //
 #define IDD_NOVEL                       101
 #define IDD_FORMVIEW                    102
+#define IDI_ICON1                       108
 #define IDC_SEARCH                      1001
 #define IDC_NOVEL_LIST                  1002
 #define IDC_CHAPTERS                    1003
@@ -14,7 +15,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        108
+#define _APS_NEXT_RESOURCE_VALUE        109
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           101

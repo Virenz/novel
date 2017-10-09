@@ -7,7 +7,7 @@
 
 #pragma comment(lib, "gdiplus.lib")
 ULONG_PTR m_gdiplusToken;
-BOOL NovelContent(HWND hwnd, const TCHAR* contents);
+BOOL NovelContent(HWND hwnd, int contents);
 
 INT_PTR CALLBACK DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 void ShowNovelInfo(HWND hwnd);
@@ -18,12 +18,15 @@ void ClearShowListView(HWND hwnd, WORD childWindow);
 // 切换显示指定ListView
 void SwitchShowWindows(HWND hwnd, WORD prWindow, WORD newWindow);
 
+HINSTANCE hgInst;
+
 int WINAPI WinMain(HINSTANCE hThisApp, HINSTANCE hPrevApp, LPSTR lpCmd, int nShow)
 {
 	// Init GDI+    
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
 
+	hgInst = hThisApp;
 	HWND hdlg = CreateDialog(hThisApp, MAKEINTRESOURCE(IDD_NOVEL), NULL, (DLGPROC)DlgProc);
 
 	if (!hdlg)
@@ -52,7 +55,8 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 	{
 		// 设置对话框的图标 
-		//SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(hgInst, MAKEINTRESOURCE(IDI_ICON1)));
+		SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(hgInst, MAKEINTRESOURCE(IDI_ICON1)));
+		
 		//	获取ListView控件的句柄  
 		HWND hListview = GetDlgItem(hDlg, IDC_NOVEL_LIST);
 		//	设置ListView的列  
@@ -173,18 +177,11 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			switch (now1->hdr.code) {//判断通知码  
 			case NM_DBLCLK:
 			{
-				// 获取选定项的小说章节链接
-				TCHAR pbuf[256];
-				LV_ITEM lvi;
-				lvi.mask = LVIF_TEXT;
-				lvi.cchTextMax = 256;
-				lvi.iItem = now1->iItem;
-				lvi.iSubItem = 2;
-				lvi.pszText = pbuf;
-				ListView_GetItem(GetDlgItem(hDlg, IDC_CHAPTERS), &lvi);
-				std::wstring content = GetChapterContent(pbuf);
+				SetDlgItemText(hDlg, IDC_NOVELCONTENT, L"");
+				SwitchShowWindows(hDlg, IDC_CHAPTERS, IDC_NOVELCONTENT);
 
-				NovelContent(hDlg, content.c_str());
+				std::thread action(NovelContent, hDlg, now1->iItem);
+				action.detach();
 				break;
 			}
 			default:
@@ -439,16 +436,26 @@ void ClearShowListView(HWND hwnd, WORD childWindow)
 		ListView_DeleteColumn(hWndListView, nCols);
 }
 
-BOOL NovelContent(HWND hDlg, const TCHAR* contents)
+BOOL NovelContent(HWND hDlg, int index)
 {
+	// 获取选定项的小说章节链接
+	TCHAR pbuf[256];
+	LV_ITEM lvi;
+	lvi.mask = LVIF_TEXT;
+	lvi.cchTextMax = 256;
+	lvi.iItem = index;
+	lvi.iSubItem = 2;
+	lvi.pszText = pbuf;
+	ListView_GetItem(GetDlgItem(hDlg, IDC_CHAPTERS), &lvi);
+	std::wstring contents = GetChapterContent(pbuf);
+
 	HWND videoimg = GetDlgItem(hDlg, IDC_NOVELCONTENT);
-	SwitchShowWindows(hDlg, IDC_CHAPTERS, IDC_NOVELCONTENT);
 
 	LOGFONT LogFont;
 	memset(&LogFont, 0, sizeof(LOGFONT));
-	lstrcpy(LogFont.lfFaceName, L"楷体");
-	LogFont.lfWeight = FW_BLACK;//FW_NORMAL; 
-	LogFont.lfHeight = -15; // 字体大小 
+	lstrcpy(LogFont.lfFaceName, L"微软雅黑");
+	LogFont.lfWeight = FW_NORMAL;//FW_BLACK
+	LogFont.lfHeight = -18; // 字体大小 
 	LogFont.lfCharSet = 134;
 	LogFont.lfOutPrecision = 3;
 	LogFont.lfClipPrecision = 2;
@@ -460,7 +467,7 @@ BOOL NovelContent(HWND hDlg, const TCHAR* contents)
 	// 取得控件句柄 
 	SendMessage(videoimg, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-	SetDlgItemText(hDlg, IDC_NOVELCONTENT, contents);
+	SetDlgItemText(hDlg, IDC_NOVELCONTENT, contents.c_str());
 	
 	//HDC hdc = GetDC(videoimg);//BeginPaint(hDlg, &ps);
 
