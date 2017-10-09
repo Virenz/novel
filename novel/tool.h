@@ -204,7 +204,7 @@ static std::wstring GetSearchPage(std::string url)
 	}
 	curl_global_cleanup();
 	// 将内容转换为WString, 判断网页源码的charset
-	UINT codepage = 65001;
+	UINT codepage = 0;
 	if(-1 != content.find("charset=gbk",0))
 	{
 		codepage = 0;
@@ -256,7 +256,7 @@ static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 	// 正则表达解析小说数据
 	// (L"<a[^/]*\"([0-9a-z/_]+.html)\"[^/]*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\！\\【\\】\\？\\~]{1,})</a>");
 	// (L"<a.*\"([0-9a-z/_]+.html)\".*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，]{1,})</a>");
-	const std::wregex pattern(L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \|\\《\\》\\（\\）?0-9⓪①②③④⑤⑥⑦⑧⑨⑩\.\\，\\！\\【\\】\\？\\“\\”\\…\\、\\：\\~\\→\\☆]{1,})</a>"); 
+	const std::wregex pattern(L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \|\\《\\》\\（\\）?0-9〇⓪①②③④⑤⑥⑦⑧⑨⑩\.\\，\\！\\【\\】\\？\\“\\”\\…\\、\\：\\~\\→\\☆]{1,})</a>"); 
 	std::wsmatch result;
 
 	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本
