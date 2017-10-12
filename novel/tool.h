@@ -256,7 +256,7 @@ static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 	// 正则表达解析小说数据
 	// (L"<a[^/]*\"([0-9a-z/_]+.html)\"[^/]*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\！\\【\\】\\？\\~]{1,})</a>");
 	// (L"<a.*\"([0-9a-z/_]+.html)\".*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，]{1,})</a>");
-	const std::wregex pattern(L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \|\\《\\》\\（\\）?0-9〇⓪①②③④⑤⑥⑦⑧⑨⑩\.\\，\\！\\【\\】\\？\\“\\”\\…\\、\\：\\~\\→\\☆]{1,})</a>"); 
+	const std::wregex pattern(L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \|\\《\\》\\（\\）?0-9〇⓪①②③④⑤⑥⑦⑧⑨⑩\.\\，\\。\\！\\【\\】\\？\\“\\”\\…\\、\\：\\~\\→\\☆]{1,})</a>"); 
 	std::wsmatch result;
 
 	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本
@@ -281,7 +281,7 @@ static std::wstring GetChapterContent(wchar_t* chapter_link)
 	std::wstring html = GetSearchPage(url);
 
 	// 正则表达解析小说章节内容
-	const std::wregex pattern(L"(&nbsp;&nbsp;&nbsp;&nbsp;|&rdquo;|)*([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\。\\！\\？\\“\\”\\…\\、\\：\\~]{1,})(<br|</p>)");
+	const std::wregex pattern(L"(&nbsp;&nbsp;&nbsp;&nbsp;|&rdquo;|)*([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\。\\！\\？\\“\\”\\…\\、\\：\\~\*]{1,})(<br|</p>)");
 	std::wsmatch result;
 	std::wstring contents;
 

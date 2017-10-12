@@ -52,11 +52,19 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
+	/*case WM_CREATE:
+	{
+		DWORD exStyle = ::GetWindowLong(hDlg, GWL_EXSTYLE);
+		exStyle |= WS_EX_LAYERED;
+		::SetWindowLong(hDlg, GWL_EXSTYLE, exStyle);
+		::SetLayeredWindowAttributes(hDlg, RGB(0, 0, 0), 0, LWA_ALPHA);
+		return 0;
+	}*/
 	case WM_INITDIALOG:
 	{
 		// 设置对话框的图标 
 		SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(hgInst, MAKEINTRESOURCE(IDI_ICON1)));
-		
+
 		//	获取ListView控件的句柄  
 		HWND hListview = GetDlgItem(hDlg, IDC_NOVEL_LIST);
 		//	设置ListView的列  
@@ -217,9 +225,10 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	}
-	/*case WM_CTLCOLORSTATIC:
+	/*case WM_CTLCOLORDLG:
 	{
 		SetBkMode((HDC)wParam, TRANSPARENT);
+		SetTextColor((HDC)wParam, GetSysColor(COLOR_WINDOWTEXT));
 		return (BOOL)((HBRUSH)GetStockObject(NULL_BRUSH));
 	}*/
 	case NM_CUSTOMDRAW:
