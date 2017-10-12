@@ -309,7 +309,7 @@ static std::vector<DownResourceInfo> GetNovelList(wchar_t* search_name)
 {
 	std::vector<DownResourceInfo> vtDownload;
 	char encodesearch[256];
-	wcscat_s(search_name, sizeof(search_name), L"小说");
+	wcscat(search_name, L"小说");
 	BOOL isSucess = UrlEncode(search_name, encodesearch, 256, true);
 	if (!isSucess)
 	{
