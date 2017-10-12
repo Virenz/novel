@@ -5,6 +5,7 @@
 #include <regex>
 #include "curl/curl.h"
 #pragma comment(lib, "libcurl_a.lib") 
+#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 typedef struct tagDownResourceInfo
 {
@@ -172,7 +173,7 @@ static bool InitCurl(CURL *easy_handle, CURLcode &res, std::string &url, std::st
 // 返回网页源代码
 static std::wstring GetSearchPage(std::string url)
 {
-	//struct curl_slist *head = NULL;
+	struct curl_slist *head = NULL;
 
 	CURL *easy_handle;
 	CURLcode res;
@@ -185,12 +186,12 @@ static std::wstring GetSearchPage(std::string url)
 	if (easy_handle)
 	{
 		curl_easy_setopt(easy_handle, CURLOPT_FOLLOWLOCATION, 1L);
-		//head = curl_slist_append(head, "Content-Type:application/x-www-form-urlencoded;charset=UTF-8");
-		//curl_easy_setopt(easy_handle, CURLOPT_HTTPHEADER, head);
+		head = curl_slist_append(head, "Content-Type:application/x-www-form-urlencoded;charset=UTF-8");
+		curl_easy_setopt(easy_handle, CURLOPT_HTTPHEADER, head);
 
 		if (!InitCurl(easy_handle, res, url, content))
 		{
-			//curl_slist_free_all(head);//记得要释放 
+			curl_slist_free_all(head);//记得要释放 
 			//释放资源
 			curl_easy_cleanup(easy_handle);
 			return tt;
@@ -198,7 +199,7 @@ static std::wstring GetSearchPage(std::string url)
 		char *realurl = NULL;
 		curl_easy_getinfo(easy_handle, CURLINFO_EFFECTIVE_URL, &realurl);
 		real_url.append(realurl);
-		//curl_slist_free_all(head);//记得要释放 
+		curl_slist_free_all(head);//记得要释放 
 		//释放资源
 		curl_easy_cleanup(easy_handle);
 	}
@@ -209,23 +210,27 @@ static std::wstring GetSearchPage(std::string url)
 	{
 		codepage = 0;
 	}
-	if(-1 != content.find("charset=GBK", 0))   
+	else if(-1 != content.find("charset=GBK", 0))   
 	{
 		codepage = 0;
 	}
-	if(-1 != content.find("charset=gb2312", 0))
+	else if(-1 != content.find("charset=gb2312", 0))
 	{
 		codepage = 0;
 	}
-	if(-1 != content.find("charset=GB2312", 0))
+	else if(-1 != content.find("charset=GB2312", 0))
 	{
 		codepage = 0;
 	}
-	if(-1 != content.find("charset=utf-8", 0))
+	else if(-1 != content.find("charset=utf-8", 0))
 	{
 		codepage = 65001;
 	}
-	if(-1 != content.find("charset=UTF-8", 0))
+	else if (-1 != content.find("charset=\"utf-8\"",0))
+	{
+		codepage = 65001;
+	}
+	else if(-1 != content.find("charset=UTF-8", 0))
 	{
 		codepage = 65001;
 	}
@@ -256,7 +261,8 @@ static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 	// 正则表达解析小说数据
 	// (L"<a[^/]*\"([0-9a-z/_]+.html)\"[^/]*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\！\\【\\】\\？\\~]{1,})</a>");
 	// (L"<a.*\"([0-9a-z/_]+.html)\".*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，]{1,})</a>");
-	const std::wregex pattern(L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \|\\《\\》\\（\\）?0-9〇⓪①②③④⑤⑥⑦⑧⑨⑩\.\\，\\。\\！\\【\\】\\？\\“\\”\\…\\、\\：\\~\\→\\☆]{1,})</a>"); 
+	const std::wregex pattern(
+		L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \|\\《\\》\\（\\）?0-9〇⓪①②③④⑤⑥⑦⑧⑨⑩\.\\，\\。\\！\\【\\】\\？\\“\\”\\…\\、\\：\\~\\→\\☆(&middot;)]{1,}( |(&middot;))[\u4e00-\u9fa5 \|\\《\\》\\（\\）?0-9〇⓪①②③④⑤⑥⑦⑧⑨⑩\.\\，\\。\\！\\【\\】\\？\\“\\”\\…\\、\\：\\~\\→\\☆(&middot;)]{1,})</a>"); 
 	std::wsmatch result;
 
 	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本
@@ -301,6 +307,7 @@ static std::vector<DownResourceInfo> GetNovelList(wchar_t* search_name)
 {
 	std::vector<DownResourceInfo> vtDownload;
 	char encodesearch[256];
+	wcscat_s(search_name, sizeof(search_name), L"小说");
 	BOOL isSucess = UrlEncode(search_name, encodesearch, 256, true);
 	if (!isSucess)
 	{
@@ -312,7 +319,7 @@ static std::vector<DownResourceInfo> GetNovelList(wchar_t* search_name)
 	int nPos = 0;
 	int n = 0;
 	int flag = 1;
-	while ((nPos = html.find(L"\"result c-container \"", n)) != -1)
+	while ((nPos = html.find(L"\"result c-container \"", n)) != -1)//
 	{
 		n = nPos + 10;
 		int nStartPos = nPos;
@@ -333,11 +340,11 @@ static std::vector<DownResourceInfo> GetNovelList(wchar_t* search_name)
 			info.strResourceName = (*it)[1].str();
 			// 获取正则表达式中 小说链接
 			info.strResourceLink = (*it)[2].str();
+			// 获取正则表达式中 小说序号
+			info.rowNum = flag;
+			vtDownload.push_back(info);
+			++flag;
 		}
-		// 获取正则表达式中 小说序号
-		info.rowNum = flag;
-		vtDownload.push_back(info);
-		++flag;
 	}
 	return vtDownload;
 }
