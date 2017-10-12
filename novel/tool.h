@@ -256,13 +256,15 @@ static std::vector<NovelChapter> GetNoveChapters(wchar_t* chapter_link)
 	// 获取真实链接
 	int nStartPos = html.rfind(L"REAL_URL:\[", html.size());
 	int nEndPos = html.rfind(L"\]", html.size());
-	std::wstring strrealurl = html.substr(nStartPos+10, nEndPos - nStartPos-10);
+	std::wstring strrealurl;
+	if(nStartPos != -1 && nEndPos != -1)
+		strrealurl = html.substr(nStartPos+10, nEndPos - nStartPos-10);
 
 	// 正则表达解析小说数据
 	// (L"<a[^/]*\"([0-9a-z/_]+.html)\"[^/]*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，\\！\\【\\】\\？\\~]{1,})</a>");
 	// (L"<a.*\"([0-9a-z/_]+.html)\".*>([\u4e00-\u9fa5 \\《\\》\\（\\）0-9\.\\，]{1,})</a>");
 	const std::wregex pattern(
-		L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \|\\《\\》\\（\\）?0-9〇⓪①②③④⑤⑥⑦⑧⑨⑩\.\\，\\。\\！\\【\\】\\？\\“\\”\\…\\、\\：\\~\\→\\☆(&middot;)]{1,}( |(&middot;))[\u4e00-\u9fa5 \|\\《\\》\\（\\）?0-9〇⓪①②③④⑤⑥⑦⑧⑨⑩\.\\，\\。\\！\\【\\】\\？\\“\\”\\…\\、\\：\\~\\→\\☆(&middot;)]{1,})</a>"); 
+		L"<a[^/]*\"([0-9a-z/_\:\.]+.html)\"[^/]*>([\u4e00-\u9fa5 \|\\《\\》\\（\\）?0-9a-zA-z〇⓪①②③④⑤⑥⑦⑧⑨⑩\.\\，\\。\\！\\【\\】\\？\\“\\”\\…\\、\\：\\~\\→\\☆(&middot;)]{1,})</a>"); 
 	std::wsmatch result;
 
 	for (std::wsregex_iterator it(html.begin(), html.end(), pattern), end;     //end是尾后迭代器，regex_iterator是regex_iterator的string类型的版本
