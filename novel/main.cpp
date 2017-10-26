@@ -94,7 +94,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		// ªÊ÷∆±≥æ∞Õº
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hDlg, &ps);
-		Gdiplus::Image* image = Gdiplus::Image::FromFile(L"background.jpg");
+		Gdiplus::Image* image = Gdiplus::Image::FromFile(L"background2.jpg");
 		if (image->GetLastStatus() != Gdiplus::Ok)
 		{
 			MessageBox(hDlg, L"º”‘ÿÕº∆¨ ß∞‹!", L"Ã· æ", MB_OK);
@@ -225,7 +225,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	}
-	/*case WM_CTLCOLORDLG:
+	/*case WM_CTLCOLORSTATIC:
 	{
 		SetBkMode((HDC)wParam, TRANSPARENT);
 		SetTextColor((HDC)wParam, GetSysColor(COLOR_WINDOWTEXT));
